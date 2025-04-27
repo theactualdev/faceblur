@@ -48,7 +48,6 @@ const UploadScreen: React.FC = () => {
   };
 
   const handleFileUpload = async (file: File) => {
-    console.log("upload")
     if (!file.type.match("image.*")) {
       setUploadError("Please upload an image file (JPEG, PNG, etc.)");
       return;

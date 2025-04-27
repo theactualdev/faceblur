@@ -5,9 +5,7 @@ type FaceRegion = { x: number; y: number; width: number; height: number };
 
 export async function loadFaceModels(){
     try{
-        console.log("Loading face models...")
         await loadDataFile("haarcascade_frontalface_default.xml", "https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_default.xml")
-        console.log("Loaded face models")
     } catch (error) {
         console.error("Error loading face models:", error)
     }
@@ -39,9 +37,7 @@ export async function processFace(file: File): Promise<string> {
                             return;
                         }
 
-                        console.log("processing")
                         const detectedFaces = await detectFaces(img);
-                        console.log("processed")
 
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
@@ -50,7 +46,6 @@ export async function processFace(file: File): Promise<string> {
                         });
 
                         const processedImageUrl = canvas.toDataURL("image/jpeg", 0.95);
-                        console.log(processedImageUrl);
                         resolve(processedImageUrl);
                     })();
                 };
