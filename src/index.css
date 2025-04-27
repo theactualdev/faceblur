@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+  
+  body {
+    @apply bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen font-sans text-slate-900;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-500;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 focus:ring-slate-500;
+  }
+  
+  .btn-accent {
+    @apply bg-accent-500 text-white hover:bg-accent-600 focus:ring-accent-500;
+  }
+
+  .card {
+    @apply bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-slate-100;
+  }
+  
+  .upload-zone {
+    @apply border-2 border-dashed border-slate-300 rounded-xl p-8 transition-all duration-200 flex flex-col items-center justify-center;
+  }
+  
+  .upload-zone-active {
+    @apply border-primary-400 bg-primary-50;
+  }
+}
+
+/* Custom animations */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.fade-out {
+  animation: fadeOut 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Progress bar animation */
+.progress-animation {
+  background-size: 200% 100%;
+  background-image: linear-gradient(to right, #0d99f0 0%, #f139fa 50%, #0d99f0 100%);
+  animation: progressAnimation 2s linear infinite;
+}
+
+@keyframes progressAnimation {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}

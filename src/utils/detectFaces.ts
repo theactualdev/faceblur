@@ -1,0 +1,130 @@
+import cv from "@techstark/opencv-js"
+import { loadDataFile } from "./loadDataFIle"
+
+type FaceRegion = { x: number; y: number; width: number; height: number };
+
+export async function loadFaceModels(){
+    try{
+        console.log("Loading face models...")
+        await loadDataFile("haarcascade_frontalface_default.xml", "https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_default.xml")
+        console.log("Loaded face models")
+    } catch (error) {
+        console.error("Error loading face models:", error)
+    }
+}
+
+
+export async function processFace(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+        try{
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                if (!event.target?.result) {
+                    reject(new Error("Failed to read image file"));
+                    return;
+                }
+
+                const img = new Image();
+                img.src = event.target.result as string;
+
+                img.onload = () => {
+                    (async () => {
+                        const canvas = document.createElement("canvas");
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext("2d");
+
+                        if (!ctx) {
+                            reject(new Error("Could not get canvas context"));
+                            return;
+                        }
+
+                        console.log("processing")
+                        const detectedFaces = await detectFaces(img);
+                        console.log("processed")
+
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                        detectedFaces.forEach((face) => {
+                            blurRegion(ctx, canvas, face.x, face.y, face.width, face.height);
+                        });
+
+                        const processedImageUrl = canvas.toDataURL("image/jpeg", 0.95);
+                        console.log(processedImageUrl);
+                        resolve(processedImageUrl);
+                    })();
+                };
+            };
+            reader.readAsDataURL(file);
+        } catch(error){
+            reject(error);
+        }
+    })
+}
+
+export async function detectFaces(img: HTMLImageElement): Promise<FaceRegion[]> {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+        throw new Error("Could not get canvas context");
+    }
+
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const src = cv.imread(canvas);
+    const gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+
+    await loadFaceModels();
+
+    const faceCascade = new cv.CascadeClassifier();
+    faceCascade.load("haarcascade_frontalface_default.xml");
+
+    const faces = new cv.RectVector();
+    const msize = new cv.Size(0, 0);
+    faceCascade.detectMultiScale(gray, faces, 1.1, 3, 0, msize, msize);
+
+    const faceRegions: FaceRegion[] = [];
+    for (let i = 0; i < faces.size(); i++) {
+        const face = faces.get(i);
+        faceRegions.push({ x: face.x, y: face.y, width: face.width, height: face.height });
+    }
+
+    src.delete();
+    gray.delete();
+    faces.delete();
+    faceCascade.delete();
+
+    return faceRegions;
+}
+
+const blurRegion = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, x: number, y: number, width: number, height: number, blurRadius: number = 20) => {
+    ctx.save();
+
+    const offscreenCanvas = document.createElement("canvas");
+    offscreenCanvas.width = width;
+    offscreenCanvas.height = height;
+    const offscreenCtx = offscreenCanvas.getContext("2d");
+
+    if (!offscreenCtx) {
+        console.error("Could not get offscreen canvas context");
+        return;
+    }
+
+    offscreenCtx.drawImage(canvas, x, y, width, height, 0, 0, width, height);
+
+    offscreenCtx.filter = `blur(${blurRadius}px)`;
+    offscreenCtx.drawImage(canvas, x, y, width, height, 0, 0, width, height);
+
+    ctx.drawImage(offscreenCanvas, 0, 0, width, height, x, y, width, height);
+
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, width, height);
+
+    ctx.restore();
+}
