@@ -122,9 +122,5 @@ const blurRegion = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, x:
 
     ctx.drawImage(offscreenCanvas, 0, 0, width, height, x, y, width, height);
 
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, width, height);
-
     ctx.restore();
 }
