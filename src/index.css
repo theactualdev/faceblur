@@ -42,7 +42,6 @@
   }
 }
 
-/* Custom animations */
 .fade-in {
   animation: fadeIn 0.5s ease-in-out;
 }
@@ -61,7 +60,6 @@
   to { opacity: 0; }
 }
 
-/* Progress bar animation */
 .progress-animation {
   background-size: 200% 100%;
   background-image: linear-gradient(to right, #0d99f0 0%, #f139fa 50%, #0d99f0 100%);
