@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppProvider } from './context/AppContext';
 import ImageUploader from './components/ImageUploader';
+import { Analytics } from '@vercel/analytics/react';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           &copy; {new Date().getFullYear()} theactualdev. Privacy Made Simple.
         </footer>
       </div>
+      <Analytics />
     </AppProvider>
   );
 }
