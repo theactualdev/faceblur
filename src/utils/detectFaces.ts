@@ -97,12 +97,14 @@ export async function detectFaces(img: HTMLImageElement): Promise<FaceRegion[]> 
     return faceRegions;
 }
 
-const blurRegion = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, x: number, y: number, width: number, height: number, blurRadius: number = 20) => {
+import * as Stackblur from "stackblur-canvas";
+
+const blurRegion = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, x: number, y: number, width: number, height: number, blurRadius: number = 80) => {
     ctx.save();
 
     const offscreenCanvas = document.createElement("canvas");
-    offscreenCanvas.width = width;
-    offscreenCanvas.height = height;
+    offscreenCanvas.width = canvas.width;
+    offscreenCanvas.height = canvas.height;
     const offscreenCtx = offscreenCanvas.getContext("2d");
 
     if (!offscreenCtx) {
@@ -110,12 +112,11 @@ const blurRegion = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, x:
         return;
     }
 
-    offscreenCtx.drawImage(canvas, x, y, width, height, 0, 0, width, height);
+    offscreenCtx.drawImage(canvas, 0, 0);
 
-    offscreenCtx.filter = `blur(${blurRadius}px)`;
-    offscreenCtx.drawImage(canvas, x, y, width, height, 0, 0, width, height);
+    Stackblur.canvasRGBA(offscreenCanvas, x, y, width, height, blurRadius);
 
-    ctx.drawImage(offscreenCanvas, 0, 0, width, height, x, y, width, height);
-
+    ctx.drawImage(offscreenCanvas, x, y, width, height, x, y, width, height);
+    
     ctx.restore();
 }
