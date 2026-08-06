@@ -4,10 +4,9 @@ import { useAppContext } from "../../context/AppContext";
 import { processFace } from "../../utils/detectFaces";
 
 const UploadScreen: React.FC = () => {
-  const { setImage, setState, setUploadProgress, setResultImage, setError } =
+  const { setImage, setState, setUploadProgress, setResultImage, error, setError } =
     useAppContext();
   const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
@@ -31,7 +30,7 @@ const UploadScreen: React.FC = () => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    setUploadError(null);
+    setError(null);
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
@@ -40,7 +39,7 @@ const UploadScreen: React.FC = () => {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUploadError(null);
+    setError(null);
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       handleFileUpload(file);
@@ -49,21 +48,33 @@ const UploadScreen: React.FC = () => {
 
   const handleFileUpload = async (file: File) => {
     if (!file.type.match("image.*")) {
-      setUploadError("Please upload an image file (JPEG, PNG, etc.)");
+      setError("Please upload an image file (JPEG, PNG, etc.)");
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      setUploadError("Image size should be under 10MB");
+      setError("Image size should be under 10MB");
       return;
     }
 
     setImage(file);
+    setUploadProgress(0);
     setState("uploading");
 
-    const processedImage = await processFace(file);
-    setResultImage(processedImage);
-    setState('result');
+    try {
+      const processedImage = await processFace(file, setUploadProgress);
+      setResultImage(processedImage);
+      setState("result");
+    } catch (err) {
+      console.error("Error processing image:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong while processing your image. Please try again."
+      );
+      setImage(null);
+      setState("upload");
+    }
   };
 
   const handleButtonClick = () => {
@@ -116,10 +127,10 @@ const UploadScreen: React.FC = () => {
         </p>
       </div>
 
-      {uploadError && (
-        <div className="flex items-center space-x-2 text-red-500 mb-4">
+      {error && (
+        <div role="alert" className="flex items-center space-x-2 text-red-500 mb-4">
           <AlertCircle size={16} />
-          <span className="text-sm">{uploadError}</span>
+          <span className="text-sm">{error}</span>
         </div>
       )}
 
