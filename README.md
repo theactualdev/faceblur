@@ -72,7 +72,12 @@ https://www.npmjs.com/package/lucide-react</p><h5>Steps</h5><ul>
 <li>Preview &amp; Confirm.</li>
 <li>Download Your Blurred Image.</li>
 <li>Done!</li>
-</ol><h2>Project Status</h2>
+</ol><h2>Branding</h2>
+<hr><ul>
+<li>The mark is a head silhouette filled with the app gradient (azure #0d99f0 to magenta #f139fa) whose right side dissolves into pixel blocks — the outline still reads as a person while the face itself does not, which is the whole point of the tool in one image.</li>
+</ul><ul>
+<li>It ships as favicon.ico (16/32/48), pwa-192/512, maskable 192/512, apple-touch-icon.png and a 1200x630 social card. The maskable variants sit at 60% of the canvas so the mark clears Android's safe-zone crop, and the icons keep a white background rather than transparency because the facial detail in the mark is itself white.</li>
+</ul><h2>Project Status</h2>
 <hr><p>Completed.</p><h2>Acknowledgement</h2>
 <hr><ul>
 <li>VoiceraIO: https://voicera.io/</li>
