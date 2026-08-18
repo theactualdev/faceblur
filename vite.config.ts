@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      includeAssets: ['apple-touch-icon.png'],
       manifest: {
         name: 'FaceBlur',
         short_name: 'FaceBlur',
@@ -43,8 +43,8 @@ export default defineConfig({
         // onnx keeps the YuNet model available offline; without it face detection
         // fails on an installed PWA with no network.
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,onnx}'],
-        // README screenshots and social-card images are never loaded by the app
-        globIgnores: ['desktop.png', 'mobile.jpeg', 'logo.png'],
+        // README screenshots are never loaded by the app
+        globIgnores: ['desktop.png', 'mobile.jpeg'],
         // globIgnores: ['/dist/assets/index-Cs5U_0s0.js', "assets/opencv-CRqMgVXC.js"],
       }
     })
