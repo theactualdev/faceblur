@@ -40,6 +40,11 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024, // 15MB
+        // onnx keeps the YuNet model available offline; without it face detection
+        // fails on an installed PWA with no network.
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,onnx}'],
+        // README screenshots and social-card images are never loaded by the app
+        globIgnores: ['desktop.png', 'mobile.jpeg', 'logo.png'],
         // globIgnores: ['/dist/assets/index-Cs5U_0s0.js', "assets/opencv-CRqMgVXC.js"],
       }
     })
@@ -49,14 +54,10 @@ export default defineConfig({
       'top-level-await': true,
     }
   },
-  build:{
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          opencv: ['@techstark/opencv-js'],
-        }
-      }
-    }
+  // OpenCV now lives entirely in the face-detection worker, so it no longer needs
+  // a manual chunk in the main bundle.
+  worker: {
+    format: 'es',
   },
   optimizeDeps: {
     exclude: ['lucide-react'],
