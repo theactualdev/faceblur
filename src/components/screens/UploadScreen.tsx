@@ -133,15 +133,6 @@ const UploadScreen: React.FC = () => {
           <span className="text-sm">{error}</span>
         </div>
       )}
-
-      <div className="text-center mt-4">
-        <p className="text-sm text-slate-600">
-          By uploading, you agree to our{" "}
-          <a href="#" className="text-primary-500 hover:underline">
-            Terms of Service
-          </a>
-        </p>
-      </div>
     </div>
   );
 };

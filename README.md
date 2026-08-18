@@ -60,6 +60,8 @@ https://www.npmjs.com/package/lucide-react</p><h5>Steps</h5><ul>
 </ul><ul>
 <li>OpenCV and the model are loaded inside a Web Worker (src/utils/faceWorker.ts). The main thread only sends pixels across and receives face rectangles back, which keeps the interface responsive while the ~10MB WebAssembly module compiles and inference runs.</li>
 </ul><ul>
+<li>Detection runs at two scales. YuNet is trained on faces that are small-to-medium relative to the frame, so a face filling most of the shot is missed entirely — measured as found at 40% frame coverage and below, missed at 60% and above. Because a close-up is exactly what a privacy tool tends to be given, a second pass renders the image small inside a padded blob to bring an oversized face back into range, and the two sets of boxes are merged with non-maximum suppression.</li>
+</ul><ul>
 <li>This build of OpenCV.js does not expose cv.FaceDetectorYN, so the model's raw outputs are decoded by hand in src/utils/yunetDecode.ts — anchor-free box decoding across strides 8, 16 and 32, followed by non-maximum suppression. That module is pure and covered by unit tests.</li>
 </ul><ul>
 <li>Blurring is applied to the full-resolution image on the main thread with stackblur-canvas, so detection speed never costs output quality.</li>

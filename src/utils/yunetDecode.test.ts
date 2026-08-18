@@ -3,6 +3,7 @@ import {
     clipToImage,
     decodeYunet,
     nonMaxSuppression,
+    keepWithinRegion,
     scaleDetections,
     type Detection,
     type StrideOutput,
@@ -114,5 +115,23 @@ describe("scaleDetections and clipToImage", () => {
 
     it("discards boxes that fall entirely outside the image", () => {
         expect(clipToImage([{ x: 50, y: 50, width: 10, height: 10, score: 1 }], 10, 10)).toHaveLength(0);
+    });
+});
+
+describe("keepWithinRegion", () => {
+    const at = (x: number, y: number): Detection => ({ x, y, width: 10, height: 10, score: 1 });
+
+    it("keeps boxes whose centre is inside the content area", () => {
+        expect(keepWithinRegion([at(0, 0), at(50, 50)], 100, 100)).toHaveLength(2);
+    });
+
+    it("drops boxes the network reported out in the padding", () => {
+        // Centre at (155,155) is well outside a 100x100 content area.
+        expect(keepWithinRegion([at(150, 150)], 100, 100)).toHaveLength(0);
+    });
+
+    it("keeps a box straddling the content edge but centred inside", () => {
+        // Centre at (98,98) is inside; the box overhangs the boundary.
+        expect(keepWithinRegion([at(93, 93)], 100, 100)).toHaveLength(1);
     });
 });

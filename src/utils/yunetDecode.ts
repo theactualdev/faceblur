@@ -129,3 +129,19 @@ export function clipToImage(detections: Detection[], width: number, height: numb
 
     return clipped;
 }
+
+/**
+ * Keeps only detections whose centre falls inside the given region.
+ *
+ * The second detection pass draws the image into a corner of a larger, padded
+ * blob so that very large faces become medium-sized. Anything the network
+ * reports out in the padding is an artefact and must be dropped before the
+ * boxes are scaled back onto the original image.
+ */
+export function keepWithinRegion(detections: Detection[], maxX: number, maxY: number): Detection[] {
+    return detections.filter((d) => {
+        const cx = d.x + d.width / 2;
+        const cy = d.y + d.height / 2;
+        return cx >= 0 && cy >= 0 && cx <= maxX && cy <= maxY;
+    });
+}
