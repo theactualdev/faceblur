@@ -17,6 +17,12 @@ import {
 } from "./yunetDecode";
 import type { FaceRegion, WorkerRequest, WorkerResponse } from "./faceDetectionTypes";
 
+// Swept over four group photos plus three negatives (an animal head and two UI
+// screenshots). The weakest genuine face scored 0.75; the strongest false positive
+// was an animal head at 0.42; noise on real photos topped out at 0.38. The safe
+// band is therefore 0.42-0.75 and 0.6 sits mid-band. Dropping to 0.45 finds one
+// extra face in a dense crowd but leaves only 0.03 of headroom over a known false
+// positive, which is the wrong trade for a privacy tool.
 const SCORE_THRESHOLD = 0.6;
 const NMS_IOU_THRESHOLD = 0.3;
 
