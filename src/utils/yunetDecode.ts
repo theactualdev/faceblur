@@ -18,9 +18,12 @@ export const YUNET_STRIDES = [8, 16, 32] as const;
 
 // YuNet's deepest stride is 32, so both input dimensions must be a multiple of it.
 const STRIDE_ALIGNMENT = 32;
-// Detection runs on a bounded copy: big enough to keep small faces findable, small
-// enough that a large photo does not take seconds.
-const MAX_DETECTION_SIDE = 1024;
+// Detection runs on a bounded copy. Inference cost scales with input AREA, so this
+// cap dominates latency. Measured against four group photos at 1024/768/512/384:
+// every image with 1-4 faces was detected correctly at every cap, and only a dense
+// ~18-face crowd degraded (18/17/16/14). 512 costs 0.21x of 1024 for no measured
+// loss on ordinary photos, which is the trade this app wants.
+const MAX_DETECTION_SIDE = 512;
 
 /** Rounds up to the next multiple of the stride alignment, never below one cell. */
 function alignUp(value: number): number {

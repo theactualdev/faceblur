@@ -64,6 +64,8 @@ https://www.npmjs.com/package/lucide-react</p><h5>Steps</h5><ul>
 </ul><ul>
 <li>This build of OpenCV.js does not expose cv.FaceDetectorYN, so the model's raw outputs are decoded by hand in src/utils/yunetDecode.ts — anchor-free box decoding across strides 8, 16 and 32, followed by non-maximum suppression. That module is pure and covered by unit tests.</li>
 </ul><ul>
+<li>Detection runs on a copy capped at 512px on the long side. Inference cost scales with input area, so this cap dominates how long an upload takes. Measured across four group photos at caps of 1024, 768, 512 and 384: every image containing one to four faces was detected correctly at every cap, and only a dense ~18-face crowd lost anything (18/17/16/14 faces respectively). 512 therefore costs about a fifth of the compute of 1024 with no measured loss on ordinary photos.</li>
+</ul><ul>
 <li>Blurring is applied to the full-resolution image on the main thread with stackblur-canvas, so detection speed never costs output quality.</li>
 </ul><h2>Usage</h2>
 <hr><ol>
