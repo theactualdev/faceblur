@@ -66,6 +66,8 @@ https://www.npmjs.com/package/lucide-react</p><h5>Steps</h5><ul>
 </ul><ul>
 <li>Detection runs on a copy capped at 512px on the long side. Inference cost scales with input area, so this cap dominates how long an upload takes. Measured across four group photos at caps of 1024, 768, 512 and 384: every image containing one to four faces was detected correctly at every cap, and only a dense ~18-face crowd lost anything (18/17/16/14 faces respectively). 512 therefore costs about a fifth of the compute of 1024 with no measured loss on ordinary photos.</li>
 </ul><ul>
+<li>A detection is kept when its score clears 0.6. That was swept from 0.15 to 0.90 over four group photos and three negatives: the weakest genuine face scored 0.75 and the strongest false positive (an animal head) scored 0.42, so 0.6 sits mid-band between them. Lowering it to 0.45 finds one extra face in a dense crowd but leaves almost no headroom above a known false positive.</li>
+</ul><ul>
 <li>Blurring is applied to the full-resolution image on the main thread with stackblur-canvas, so detection speed never costs output quality.</li>
 </ul><h2>Usage</h2>
 <hr><ol>
