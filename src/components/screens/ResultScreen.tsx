@@ -79,7 +79,7 @@ const ResultScreen: React.FC = () => {
       
       <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-3 mb-6">
         <button 
-          className="btn btn-primary flex items-center space-x-2 w-full sm:w-auto"
+          className="btn btn-primary flex items-center justify-center space-x-2 w-full sm:w-auto"
           onClick={handleDownload}
         >
           <Download size={18} />
@@ -87,7 +87,7 @@ const ResultScreen: React.FC = () => {
         </button>
         
         <button 
-          className="btn btn-secondary flex items-center space-x-2 w-full sm:w-auto"
+          className="btn btn-secondary flex items-center justify-center space-x-2 w-full sm:w-auto"
           onClick={resetApp}
         >
           <UploadCloud size={18} />
@@ -96,7 +96,7 @@ const ResultScreen: React.FC = () => {
         
         {canShare && (
           <button
-            className="btn btn-accent flex items-center space-x-2 w-full sm:w-auto"
+            className="btn btn-accent flex items-center justify-center space-x-2 w-full sm:w-auto"
             onClick={handleShare}
           >
             <Share2 size={18} />
