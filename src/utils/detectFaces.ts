@@ -15,10 +15,17 @@ const yieldToPaint = () =>
     document.hidden ? Promise.resolve() : new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 
-export async function processFace(file: File, onProgress?: ProgressCallback): Promise<string> {
+export type ProcessedImage = {
+    /** JPEG data URL of the image with every detected face blurred. */
+    url: string;
+    /** How many faces were found — 0 means the output is visually identical to the input. */
+    faceCount: number;
+};
+
+export async function processFace(file: File, onProgress?: ProgressCallback): Promise<ProcessedImage> {
     const report = (progress: number) => onProgress?.(progress);
 
-    return new Promise((resolve, reject) => {
+    return new Promise<ProcessedImage>((resolve, reject) => {
         try{
             report(0);
 
@@ -73,7 +80,7 @@ export async function processFace(file: File, onProgress?: ProgressCallback): Pr
 
                         const processedImageUrl = canvas.toDataURL("image/jpeg", 0.95);
                         report(100);
-                        resolve(processedImageUrl);
+                        resolve({ url: processedImageUrl, faceCount: detectedFaces.length });
                     })().catch(reject);
                 };
             };

@@ -135,3 +135,27 @@ describe("processFace error handling", () => {
         ).rejects.toThrow(/could not load the face detection model/i);
     });
 });
+
+describe("processFace result", () => {
+    it("reports zero faces so the UI can show an honest empty state", async () => {
+        detected = [];
+        const { processFace } = await loadModule();
+
+        const result = await processFace(new File(["x"], "a.png", { type: "image/png" }));
+
+        expect(result.faceCount).toBe(0);
+        expect(result.url).toMatch(/^data:image\/jpeg/);
+    });
+
+    it("reports how many faces were blurred", async () => {
+        detected = [
+            { x: 1, y: 1, width: 10, height: 10 },
+            { x: 40, y: 40, width: 10, height: 10 },
+        ];
+        const { processFace } = await loadModule();
+
+        const result = await processFace(new File(["x"], "a.png", { type: "image/png" }));
+
+        expect(result.faceCount).toBe(2);
+    });
+});

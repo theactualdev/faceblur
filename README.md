@@ -31,6 +31,8 @@
 </ul><ul>
 <li>Works Offline: Installable as a PWA, with the detection model cached for use without a connection.</li>
 </ul><ul>
+<li>Honest Results: the success screen states exactly how many faces were blurred, and when no face is found the app says so plainly instead of claiming success — for a privacy tool, 'nothing was blurred' must never be dressed up as 'all faces blurred'.</li>
+</ul><ul>
 <li>Smart Blurring: Applies smooth, natural-looking blur effects specifically to faces without affecting the rest of the image.</li>
 </ul><ul>
 <li>Privacy-First Design: No images are stored; processing happens instantly and securely to protect user data.</li>

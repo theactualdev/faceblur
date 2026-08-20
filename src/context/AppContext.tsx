@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode} from 'react';
 
-export type AppState = 'upload' | 'uploading' | 'result';
+export type AppState = 'upload' | 'uploading' | 'result' | 'no-faces';
 
 interface AppContextType {
   state: AppState;
@@ -11,6 +11,8 @@ interface AppContextType {
   setUploadProgress: React.Dispatch<React.SetStateAction<number>>;
   resultImage: string | null;
   setResultImage: React.Dispatch<React.SetStateAction<string | null>>;
+  faceCount: number;
+  setFaceCount: React.Dispatch<React.SetStateAction<number>>;
   error: string | null;
   setError: React.Dispatch<React.SetStateAction<string | null>>;
   resetApp: () => void;
@@ -25,6 +27,8 @@ const AppContext = createContext<AppContextType>({
   setUploadProgress: () => {},
   resultImage: null,
   setResultImage: () => {},
+  faceCount: 0,
+  setFaceCount: () => {},
   error: null,
   setError: () => {},
   resetApp: () => {},
@@ -35,6 +39,7 @@ export const AppProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const [image, setImage] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [resultImage, setResultImage] = useState<string | null>(null);
+  const [faceCount, setFaceCount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
   const resetApp = () => {
@@ -42,6 +47,7 @@ export const AppProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     setImage(null);
     setUploadProgress(0);
     setResultImage(null);
+    setFaceCount(0);
     setError(null);
   };
 
@@ -56,6 +62,8 @@ export const AppProvider: React.FC<{children: ReactNode}> = ({ children }) => {
         setUploadProgress,
         resultImage,
         setResultImage,
+        faceCount,
+        setFaceCount,
         error,
         setError,
         resetApp,

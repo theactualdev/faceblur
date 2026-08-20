@@ -5,7 +5,7 @@ import { useAppContext } from '../../context/AppContext';
 const SHARE_FILE_NAME = 'blurred-image.jpg';
 
 const ResultScreen: React.FC = () => {
-  const { resultImage, resetApp } = useAppContext();
+  const { resultImage, faceCount, resetApp } = useAppContext();
   const [canShare, setCanShare] = useState<boolean>(false);
   const [shareError, setShareError] = useState<string | null>(null);
 
@@ -64,7 +64,9 @@ const ResultScreen: React.FC = () => {
         <div className="inline-block animate-bounce-slow">🎉</div>
       </div>
       <p className="text-slate-600 mb-6 text-center">
-        Your image has been processed with all faces blurred.
+        {faceCount === 1
+          ? 'We found 1 face and blurred it.'
+          : `We found ${faceCount} faces and blurred them all.`}
       </p>
       
       {resultImage && (

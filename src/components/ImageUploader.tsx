@@ -3,6 +3,7 @@ import { useAppContext } from '../context/AppContext';
 import UploadScreen from './screens/UploadScreen';
 import UploadingScreen from './screens/UploadingScreen';
 import ResultScreen from './screens/ResultScreen';
+import NoFacesScreen from './screens/NoFacesScreen';
 
 const ImageUploader: React.FC = () => {
   const { state } = useAppContext();
@@ -12,6 +13,7 @@ const ImageUploader: React.FC = () => {
       {state === 'upload' && <UploadScreen />}
       {state === 'uploading' && <UploadingScreen />}
       {state === 'result' && <ResultScreen />}
+      {state === 'no-faces' && <NoFacesScreen />}
     </div>
   );
 };
