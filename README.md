@@ -39,7 +39,7 @@
 </ul><ul>
 <li>Downloadable Images: After blurring, users can quickly save the processed image.</li>
 </ul><h2>Screenshots</h2>
-<hr><p><img src="https://faceblur-theactualdev.vercel.app/mobile.jpeg" alt=""></p><p><img src="https://faceblur-theactualdev.vercel.app/desktop.png" alt=""></p><h2>Setup</h2>
+<hr><p><img src="https://faceblur-v3.vercel.app/mobile.jpeg" alt=""></p><p><img src="https://faceblur-v3.vercel.app/desktop.png" alt=""></p><h2>Setup</h2>
 <hr><p>@techstark/opencv-js: https://www.npmjs.com/package/@techstark/opencv-js</p>
 <p>lucide-react:
 https://www.npmjs.com/package/lucide-react</p><h5>Steps</h5><ul>
