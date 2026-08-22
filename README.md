@@ -31,6 +31,8 @@
 </ul><ul>
 <li>Works Offline: Installable as a PWA, with the detection model cached for use without a connection.</li>
 </ul><ul>
+<li>Keep Some Faces Visible: every face is blurred by default, and an optional "Adjust faces" step lets you tap individual faces to leave them recognizable — useful when you have consent from some people in a group photo but not others. Revealing is always opt-out, so doing nothing can only ever over-blur, and any export that would leave a face recognizable asks for confirmation first.</li>
+</ul><ul>
 <li>Honest Results: the success screen states exactly how many faces were blurred, and when no face is found the app says so plainly instead of claiming success — for a privacy tool, 'nothing was blurred' must never be dressed up as 'all faces blurred'.</li>
 </ul><ul>
 <li>Smart Blurring: Applies smooth, natural-looking blur effects specifically to faces without affecting the rest of the image.</li>
@@ -69,6 +71,8 @@ https://www.npmjs.com/package/lucide-react</p><h5>Steps</h5><ul>
 <li>Detection runs on a copy capped at 512px on the long side. Inference cost scales with input area, so this cap dominates how long an upload takes. Measured across four group photos at caps of 1024, 768, 512 and 384: every image containing one to four faces was detected correctly at every cap, and only a dense ~18-face crowd lost anything (18/17/16/14 faces respectively). 512 therefore costs about a fifth of the compute of 1024 with no measured loss on ordinary photos.</li>
 </ul><ul>
 <li>A detection is kept when its score clears 0.6. That was swept from 0.15 to 0.90 over four group photos and three negatives: the weakest genuine face scored 0.75 and the strongest false positive (an animal head) scored 0.42, so 0.6 sits mid-band between them. Lowering it to 0.45 finds one extra face in a dense crowd but leaves almost no headroom above a known false positive.</li>
+</ul><ul>
+<li>Selective blur re-renders from the pristine original every time, so toggling a face repeatedly can never compound blur onto already-blurred pixels, and the initial result and an adjusted one come from the same render path. The renderer reports how many faces it actually blurred, and the interface displays that number rather than inferring it from the selection — so the copy cannot claim a face is blurred when it is not.</li>
 </ul><ul>
 <li>Blurring is applied to the full-resolution image on the main thread with stackblur-canvas, so detection speed never costs output quality.</li>
 </ul><h2>Usage</h2>

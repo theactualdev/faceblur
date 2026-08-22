@@ -1,8 +1,10 @@
 import { detectFacesInImageData } from "./faceDetectorClient"
 import type { FaceRegion } from "./faceDetectionTypes"
 import type { ProgressCallback } from "./faceDetectorClient"
+import * as Stackblur from "stackblur-canvas";
 
 export type { ProgressCallback } from "./faceDetectorClient";
+export type { FaceRegion } from "./faceDetectionTypes";
 
 // Blurring still runs here, so the browser needs an explicit chance to paint after
 // each progress report or the bar jumps straight to 100. Deliberately a timer rather
@@ -14,13 +16,62 @@ export type { ProgressCallback } from "./faceDetectorClient";
 const yieldToPaint = () =>
     document.hidden ? Promise.resolve() : new Promise<void>((resolve) => setTimeout(resolve, 0));
 
+/** Nothing revealed — every detected face gets blurred. This is the default everywhere. */
+const NOTHING_REVEALED: ReadonlySet<number> = new Set<number>();
 
 export type ProcessedImage = {
-    /** JPEG data URL of the image with every detected face blurred. */
+    /** JPEG data URL with every detected face blurred. */
     url: string;
     /** How many faces were found — 0 means the output is visually identical to the input. */
     faceCount: number;
+    /** Face rectangles in original-image pixel coordinates, in a stable order. */
+    faces: FaceRegion[];
+    /** The untouched original, kept so a different subset can be re-blurred without re-detecting. */
+    sourceUrl: string;
 };
+
+export type RenderResult = {
+    url: string;
+    /**
+     * How many faces this render actually blurred. Derived from the render itself
+     * rather than from the caller's intent, so the UI can never claim a face was
+     * blurred when the renderer did not blur it.
+     */
+    blurredCount: number;
+};
+
+/**
+ * Draws the source image and blurs every face except those in `revealed`.
+ *
+ * Always starts from the pristine source, so repeated toggling cannot compound blur
+ * onto already-blurred pixels. Synchronous by design: blurring now costs roughly the
+ * area of the faces rather than the whole frame, and a synchronous render means the
+ * displayed bytes can never lag behind the selection that produced them.
+ */
+export function renderBlurred(
+    source: HTMLImageElement,
+    faces: readonly FaceRegion[],
+    revealed: ReadonlySet<number> = NOTHING_REVEALED
+): RenderResult {
+    const canvas = document.createElement("canvas");
+    canvas.width = source.width;
+    canvas.height = source.height;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not get canvas context");
+
+    ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+
+    let blurredCount = 0;
+    for (let i = 0; i < faces.length; i++) {
+        if (revealed.has(i)) continue;
+        const face = faces[i];
+        blurRegion(canvas, face.x, face.y, face.width, face.height);
+        blurredCount++;
+    }
+
+    return { url: canvas.toDataURL("image/jpeg", 0.95), blurredCount };
+}
 
 export async function processFace(file: File, onProgress?: ProgressCallback): Promise<ProcessedImage> {
     const report = (progress: number) => onProgress?.(progress);
@@ -45,42 +96,32 @@ export async function processFace(file: File, onProgress?: ProgressCallback): Pr
 
                 report(35);
 
+                const sourceUrl = event.target.result as string;
                 const img = new Image();
                 img.onerror = () => reject(new Error("That image could not be opened. Please try a different file."));
-                img.src = event.target.result as string;
+                img.src = sourceUrl;
 
                 img.onload = () => {
                     (async () => {
-                        const canvas = document.createElement("canvas");
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        const ctx = canvas.getContext("2d");
-
-                        if (!ctx) {
-                            reject(new Error("Could not get canvas context"));
-                            return;
-                        }
-
                         const detectedFaces = await detectFaces(img, report);
-
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                         report(70);
                         await yieldToPaint();
 
-                        for (let i = 0; i < detectedFaces.length; i++) {
-                            const face = detectedFaces[i];
-                            blurRegion(ctx, canvas, face.x, face.y, face.width, face.height);
-                            report(70 + Math.round(((i + 1) / detectedFaces.length) * 22));
-                            await yieldToPaint();
-                        }
+                        // Same render path the adjust screen uses, so the default
+                        // result and an adjusted one can never diverge.
+                        const { url } = renderBlurred(img, detectedFaces);
 
                         report(95);
                         await yieldToPaint();
 
-                        const processedImageUrl = canvas.toDataURL("image/jpeg", 0.95);
                         report(100);
-                        resolve({ url: processedImageUrl, faceCount: detectedFaces.length });
+                        resolve({
+                            url,
+                            faceCount: detectedFaces.length,
+                            faces: detectedFaces,
+                            sourceUrl,
+                        });
                     })().catch(reject);
                 };
             };
@@ -109,26 +150,23 @@ export async function detectFaces(img: HTMLImageElement, onProgress?: ProgressCa
     return detectFacesInImageData(imageData, onProgress);
 }
 
-import * as Stackblur from "stackblur-canvas";
-
-const blurRegion = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, x: number, y: number, width: number, height: number, blurRadius: number = 80) => {
-    ctx.save();
-
-    const offscreenCanvas = document.createElement("canvas");
-    offscreenCanvas.width = canvas.width;
-    offscreenCanvas.height = canvas.height;
-    const offscreenCtx = offscreenCanvas.getContext("2d");
-
-    if (!offscreenCtx) {
-        console.error("Could not get offscreen canvas context");
-        return;
-    }
-
-    offscreenCtx.drawImage(canvas, 0, 0);
-
-    Stackblur.canvasRGBA(offscreenCanvas, x, y, width, height, blurRadius);
-
-    ctx.drawImage(offscreenCanvas, x, y, width, height, x, y, width, height);
-
-    ctx.restore();
-}
+/**
+ * Blurs one rectangle of the canvas in place.
+ *
+ * stackblur reads and writes only the given rect, so the full-frame offscreen copy
+ * this used to make was redundant work — roughly 31MB of pixel traffic per face on a
+ * large photo. Worse, that copy needed its own 2D context, and the old code returned
+ * silently when it could not get one: the face stayed fully visible while still being
+ * counted as blurred. Calling stackblur directly removes both the cost and that
+ * silent-disclosure path, and it throws if the pixels cannot be read.
+ */
+const blurRegion = (
+    canvas: HTMLCanvasElement,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    blurRadius: number = 80
+) => {
+    Stackblur.canvasRGBA(canvas, x, y, width, height, blurRadius);
+};

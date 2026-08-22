@@ -4,7 +4,7 @@ import { useAppContext } from "../../context/AppContext";
 import { processFace } from "../../utils/detectFaces";
 
 const UploadScreen: React.FC = () => {
-  const { setImage, setState, setUploadProgress, setResultImage, setFaceCount, error, setError } =
+  const { setImage, setState, setUploadProgress, setResultImage, setFaceCount, setFaces, setSourceUrl, setRevealed, error, setError } =
     useAppContext();
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -62,9 +62,13 @@ const UploadScreen: React.FC = () => {
     setState("uploading");
 
     try {
-      const { url, faceCount } = await processFace(file, setUploadProgress);
+      const { url, faceCount, faces, sourceUrl } = await processFace(file, setUploadProgress);
       setResultImage(url);
       setFaceCount(faceCount);
+      setFaces(faces);
+      setSourceUrl(sourceUrl);
+      // A fresh image must never inherit the previous image's reveals.
+      setRevealed(new Set<number>());
       setState(faceCount === 0 ? "no-faces" : "result");
     } catch (err) {
       console.error("Error processing image:", err);

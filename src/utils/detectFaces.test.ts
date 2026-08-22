@@ -78,6 +78,9 @@ beforeEach(() => {
 afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+    // canvasRGBA is a module-level vi.fn(); restoreAllMocks does not reset it, so its
+    // call log would otherwise leak between tests and make assertions meaningless.
+    vi.clearAllMocks();
 });
 
 describe("processFace progress reporting", () => {
@@ -102,7 +105,9 @@ describe("processFace progress reporting", () => {
         expect(seq).toEqual(expect.arrayContaining([40, 55, 68]));
     });
 
-    it("reports the blur band once per detected face, ending at 92", async () => {
+    it("reports the render stage once, not per face", async () => {
+        // Blurring is now a single synchronous render rather than an awaited loop,
+        // so there is no longer a per-face progress band to report.
         detected = [
             { x: 1, y: 1, width: 10, height: 10 },
             { x: 40, y: 40, width: 10, height: 10 },
@@ -112,7 +117,7 @@ describe("processFace progress reporting", () => {
         const seq: number[] = [];
         await processFace(new File(["x"], "a.png", { type: "image/png" }), (p) => seq.push(p));
 
-        expect(seq.filter((p) => p > 70 && p <= 92)).toEqual([81, 92]);
+        expect(seq).toEqual(expect.arrayContaining([70, 95, 100]));
     });
 });
 
@@ -157,5 +162,74 @@ describe("processFace result", () => {
         const result = await processFace(new File(["x"], "a.png", { type: "image/png" }));
 
         expect(result.faceCount).toBe(2);
+    });
+});
+
+describe("renderBlurred — selective blur", () => {
+    /** A stand-in source image; renderBlurred only reads width/height and draws it. */
+    const source = { width: 100, height: 80 } as unknown as HTMLImageElement;
+
+    const FACES = [
+        { x: 0, y: 0, width: 10, height: 10 },
+        { x: 20, y: 20, width: 10, height: 10 },
+        { x: 40, y: 40, width: 10, height: 10 },
+    ];
+
+    /** The rectangles actually handed to stackblur, in order. */
+    async function blurredRects() {
+        const { canvasRGBA } = await import("stackblur-canvas");
+        return (canvasRGBA as unknown as { mock: { calls: unknown[][] } }).mock.calls.map((c) => ({
+            x: c[1],
+            y: c[2],
+            width: c[3],
+            height: c[4],
+        }));
+    }
+
+    it("blurs every face when nothing is revealed — the default is unchanged", async () => {
+        const { renderBlurred } = await loadModule();
+
+        const result = renderBlurred(source, FACES);
+
+        expect(result.blurredCount).toBe(3);
+        expect(await blurredRects()).toEqual(FACES);
+    });
+
+    it("skips exactly the revealed faces", async () => {
+        const { renderBlurred } = await loadModule();
+
+        const result = renderBlurred(source, FACES, new Set([1]));
+
+        expect(result.blurredCount).toBe(2);
+        expect(await blurredRects()).toEqual([FACES[0], FACES[2]]);
+    });
+
+    it("reports what it actually blurred, so the UI cannot overstate it", async () => {
+        const { renderBlurred } = await loadModule();
+
+        expect(renderBlurred(source, FACES, new Set([0, 1, 2])).blurredCount).toBe(0);
+    });
+
+    it("ignores revealed indices that do not correspond to a face", async () => {
+        const { renderBlurred } = await loadModule();
+
+        const result = renderBlurred(source, FACES, new Set([99]));
+
+        expect(result.blurredCount).toBe(3);
+    });
+
+    it("redraws the pristine source every render so toggling cannot compound blur", async () => {
+        const { renderBlurred } = await loadModule();
+        const ctx = (document.createElement("canvas") as HTMLCanvasElement).getContext("2d");
+        const drawImage = ctx?.drawImage as unknown as { mock: { calls: unknown[][] } };
+        drawImage.mock.calls.length = 0;
+
+        renderBlurred(source, FACES, new Set([0]));
+        renderBlurred(source, FACES, new Set([1]));
+
+        // One full redraw of the untouched source per render — never a re-blur of
+        // whatever the previous render left behind.
+        expect(drawImage.mock.calls.length).toBe(2);
+        expect(drawImage.mock.calls.every((c) => c[0] === source)).toBe(true);
     });
 });
